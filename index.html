@@ -1,0 +1,1124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Digital Twin Project Hub</title>
+  <style>
+    :root{
+      --bg:#05060a;
+      --card:#ffffff;
+      --border:#d7dbe7;
+      --shadow:0 10px 25px rgba(20,30,60,.12);
+      --shadow-soft:0 8px 18px rgba(20,30,60,.10);
+      --radius:16px;
+      --gap:24px;
+      --labelW:190px;
+      --cardH:120px;
+      --pageTopPad: clamp(24px, 10vh, 220px);
+      --line: rgba(255,255,255,.18);
+      --font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:
+        repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 64px),
+        repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, transparent 1px 64px),
+        var(--bg);
+      color:#e9edff;
+      min-height:100vh;
+    }
+
+    .page-title{
+      position:fixed;
+      top:16px;
+      left:0;
+      right:0;
+      text-align:center;
+      font-weight:900;
+      font-size:28px;
+      letter-spacing:.2px;
+      color:#f4f6ff;
+      z-index:10;
+      pointer-events:none;
+    }
+
+    .page-title::before{
+      display:none;
+    }
+
+    .page-title::after{
+      display:none;
+    }
+
+    .title-connectors{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:9;
+    }
+
+    .title-connectors .tc-h{
+      position:absolute;
+      height:4px;
+      background: var(--line);
+      border-radius: 999px;
+    }
+
+    .title-connectors .tc-v{
+      position:absolute;
+      width:4px;
+      background: var(--line);
+      border-radius: 999px;
+    }
+
+    .title-connectors .tc-v::after{
+      content:"";
+      position:absolute;
+      left:50%;
+      bottom:-1px;
+      transform: translateX(-50%);
+      width:0;
+      height:0;
+      border-left:7px solid transparent;
+      border-right:7px solid transparent;
+      border-top:9px solid var(--line);
+    }
+
+    .page{
+      max-width:none;
+      margin:0 auto;
+      padding-top: var(--pageTopPad);
+    }
+
+    .projects-grid{
+      display:grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: var(--gap);
+      align-items:start;
+      position:relative;
+      --topPad: 26px;
+      padding-top: var(--topPad);
+      overflow: visible;
+    }
+
+    .projects-grid::before{
+      content:"";
+      position:absolute;
+      left: calc(var(--gap) / 2);
+      right: calc(var(--gap) / 2);
+      top: calc(var(--topPad) + (var(--cardH) / 2));
+      height: 3px;
+      background: var(--line);
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .project-col{
+      display:flex;
+      flex-direction:column;
+      gap: var(--gap);
+      min-width:0;
+      position:relative;
+    }
+
+    .project-col .report-card{
+      display:flex;
+    }
+
+    .project-col::before{
+      content:"";
+      position:absolute;
+      left:50%;
+      top: var(--cardH);
+      width:3px;
+      height: calc((4 * var(--cardH)) + (4 * var(--gap)));
+      transform: translateX(-50%);
+      background: var(--line);
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .project-col > .project-pill:not(:last-child)::after,
+    .project-col > .report-card:not(:last-child)::after{
+      content:"";
+      position:absolute;
+      left:50%;
+      bottom: calc(-1 * (var(--gap) / 2));
+      width:8px;
+      height:8px;
+      transform: translateX(-50%);
+      border-radius:999px;
+      background:#fff;
+      border:1px solid var(--line);
+      box-shadow: var(--shadow-soft);
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .project-pill{
+      height:var(--cardH);
+      border-radius:18px;
+      width:100%;
+      position:relative;
+      z-index:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:8px;
+      color:#fff;
+      font-weight:900;
+      letter-spacing:.2px;
+      text-shadow:0 2px 6px rgba(0,0,0,.2);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,.25);
+      user-select:none;
+      cursor:pointer;
+    }
+
+    .project-col.is-active .project-pill{
+      box-shadow: 0 14px 34px rgba(20,30,60,.18);
+      outline: 2px solid rgba(255,255,255,.18);
+      outline-offset: 2px;
+    }
+
+    .project-pill .project-name{
+      display:block;
+      font-size:18px;
+      line-height:1.15;
+      width:100%;
+      max-width:100%;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    .report-card{
+      height:var(--cardH);
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-soft);
+      overflow:hidden;
+      position:relative;
+      z-index:1;
+      display:flex;
+      flex-direction:column;
+      width: calc(100% - 34px);
+      margin: 0 auto;
+    }
+
+    .report-header{
+      padding:6px 10px;
+      font-weight:900;
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      letter-spacing:.2px;
+    }
+
+    .report-body{
+      padding:6px 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex:1;
+    }
+
+    .hint{
+      color: rgba(233,237,255,.70);
+      font-size:12px;
+      line-height:1.25;
+      max-width:68%;
+    }
+
+    .actions{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      flex-shrink:0;
+    }
+
+    .btn{
+      appearance:none;
+      border:1px solid rgba(255,255,255,.28);
+      background:rgba(255,255,255,.16);
+      color:#fff;
+      font-weight:800;
+      padding:8px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      transition: transform .06s ease, filter .15s ease;
+      white-space:nowrap;
+    }
+
+    .btn:active{ transform: translateY(1px); }
+
+    .btn-secondary{
+      border:1px solid var(--border);
+      background:#fff;
+      color:#1b2236;
+      font-weight:800;
+      font-size:10px;
+      height:24px;
+      line-height:24px;
+      padding:0 10px;
+      border-radius:10px;
+    }
+
+    .btn-secondary[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+
+    .file-name{
+      font-size:10px;
+      color:#2b344f;
+      font-weight:700;
+      max-width:100%;
+      overflow:hidden;
+      line-height:1.2;
+      display:-webkit-box;
+      -webkit-box-orient:vertical;
+      -webkit-line-clamp:2;
+      line-clamp:2;
+      white-space:normal;
+    }
+
+    .report-card[data-report="AURA Report"] .file-name{
+      display:none;
+    }
+
+    .report-card[data-report="Flipthrough"] [data-role="streamLabel"],
+    .report-card[data-report="Flipthrough"] .hint{
+      display:none;
+    }
+
+    .report-card[data-report="Video"] [data-role="videoLabel"],
+    .report-card[data-report="Video"] .hint{
+      display:none;
+    }
+
+    .report-meta{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-width:0;
+      flex:1;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:2px 8px;
+      border-radius:999px;
+      background:#eef2ff;
+      color:#253056;
+      border:1px solid #dbe2ff;
+      width:fit-content;
+      font-size:10px;
+      font-weight:800;
+    }
+
+    .modal{
+      position:fixed;
+      inset:0;
+      background:rgba(10,16,28,.6);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:10;
+    }
+
+    .modal[open]{ display:flex; }
+
+    .modal-card{
+      width:min(1100px, 100%);
+      height:min(88vh, 900px);
+      background:#fff;
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow:0 25px 65px rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.25);
+      display:flex;
+      flex-direction:column;
+    }
+
+    .modal-top{
+      padding:10px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background:linear-gradient(90deg,#0b1a3a,#143a88);
+      color:#fff;
+      font-weight:900;
+    }
+
+    .modal-title{
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    .modal-close{
+      border:1px solid rgba(255,255,255,.32);
+      background:rgba(255,255,255,.14);
+      color:#fff;
+      font-weight:900;
+      border-radius:12px;
+      padding:8px 10px;
+      cursor:pointer;
+    }
+
+    .modal-frame{
+      flex:1;
+      border:0;
+      width:100%;
+    }
+
+    .cA{ background: linear-gradient(180deg,#3aa0ff,#1f63c7); }
+    .cB{ background: linear-gradient(180deg,#55cc57,#2e8f31); }
+    .cC{ background: linear-gradient(180deg,#ff9b39,#d35b0d); }
+    .cD{ background: linear-gradient(180deg,#8c69ff,#4d2fb8); }
+    .cE{ background: linear-gradient(180deg,#ff5e5e,#c52b2b); }
+    .cF{ background: linear-gradient(180deg,#20c8c8,#0a7f86); }
+    .cG{ background: linear-gradient(180deg,#ffd66b,#d2a11c); }
+
+    .hA{ background: linear-gradient(90deg,#69b7ff,#3f86dd); }
+    .hB{ background: linear-gradient(90deg,#79de83,#46ab54); }
+    .hC{ background: linear-gradient(90deg,#ffb06a,#e27c2e); }
+    .hD{ background: linear-gradient(90deg,#ab92ff,#6c55d6); }
+    .hE{ background: linear-gradient(90deg,#ff8a8a,#d85656); }
+    .hF{ background: linear-gradient(90deg,#64dddd,#2aa2aa); }
+    .hG{ background: linear-gradient(90deg,#ffe39a,#e0b545); }
+
+    @media (max-width: 980px){
+      .projects-grid{ grid-template-columns: 1fr; }
+      .projects-grid::before{ display:none; }
+      .project-col::before{ display:none; }
+      .project-col::after{ display:none; }
+      .project-col > .project-pill:not(:last-child)::after,
+      .project-col > .report-card:not(:last-child)::after{ display:none; }
+      .page{ padding-top: 24px; }
+      .project-pill::before{ display:none; }
+      .project-pill{ height:auto; min-height:86px; }
+      .report-card{ height:auto; min-height:128px; }
+      .hint{ max-width:100%; }
+      .actions{ width:100%; justify-content:flex-end; flex-wrap:wrap; }
+      .report-body{ flex-direction:column; align-items:stretch; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-title">Digital Twin Project Hub</div>
+  <div class="title-connectors" id="titleConnectors" aria-hidden="true"></div>
+  <div class="page">
+    <div class="projects-grid">
+      <div class="project-col">
+        <div class="project-pill cA"><span class="project-name">ShadeLA</span></div>
+
+        <section class="report-card" data-project="ShadeLA" data-report="Arc GIS Report" data-color="A">
+          <header class="report-header hA">
+            <span>Arc GIS Report</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <button class="btn-secondary" type="button" data-action="open-arcgis" disabled>Open Map</button>
+              <div class="file-name" data-role="filename">Not configured</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="ShadeLA" data-report="AURA Report" data-color="A" data-pdf-source="folder">
+          <header class="report-header hA">
+            <span>AURA Report</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <button class="btn-secondary" type="button" data-action="view" disabled>View PDF</button>
+              <div class="file-name" data-role="filename">No PDF selected</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="ShadeLA" data-report="Flipthrough" data-color="A" data-streaming="pixel">
+          <header class="report-header hA">
+            <span>Flipthrough</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <span class="badge">Stream</span>
+              <div class="file-name" data-role="streamLabel">Not configured</div>
+              <div class="hint">Set a URL to open your Flipthrough session.</div>
+            </div>
+            <div class="actions">
+              <button class="btn-secondary" type="button" data-action="open-stream" disabled>Open</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="ShadeLA" data-report="Video" data-color="A" data-video="video">
+          <header class="report-header hA">
+            <span>Video</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <span class="badge">Video</span>
+              <div class="file-name" data-role="videoLabel">Not configured</div>
+              <div class="hint">Set a URL to open the project video.</div>
+            </div>
+            <div class="actions">
+              <button class="btn-secondary" type="button" data-action="open-video" disabled>Open</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="project-col">
+        <div class="project-pill cB"><span class="project-name">Pando</span></div>
+
+        <section class="report-card" data-project="Pando" data-report="Arc GIS Report" data-color="B">
+          <header class="report-header hB">
+            <span>Arc GIS Report</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <button class="btn-secondary" type="button" data-action="open-arcgis" disabled>Open Map</button>
+              <div class="file-name" data-role="filename">Not configured</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="Pando" data-report="AURA Report" data-color="B" data-pdf-source="folder">
+          <header class="report-header hB">
+            <span>AURA Report</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <button class="btn-secondary" type="button" data-action="view" disabled>View PDF</button>
+              <div class="file-name" data-role="filename">No PDF selected</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="Pando" data-report="Flipthrough" data-color="B" data-streaming="pixel">
+          <header class="report-header hB">
+            <span>Flipthrough</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <span class="badge">Stream</span>
+              <div class="file-name" data-role="streamLabel">Not configured</div>
+              <div class="hint">Set a URL to open your Flipthrough session.</div>
+            </div>
+            <div class="actions">
+              <button class="btn-secondary" type="button" data-action="open-stream" disabled>Open</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="Pando" data-report="Video" data-color="B" data-video="video">
+          <header class="report-header hB">
+            <span>Video</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <span class="badge">Video</span>
+              <div class="file-name" data-role="videoLabel">Not configured</div>
+              <div class="hint">Set a URL to open the project video.</div>
+            </div>
+            <div class="actions">
+              <button class="btn-secondary" type="button" data-action="open-video" disabled>Open</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="project-col">
+        <div class="project-pill cG"><span class="project-name">USGBC</span></div>
+
+        <section class="report-card" data-project="USGBC" data-report="Arc GIS Report" data-color="G">
+          <header class="report-header hG">
+            <span>Arc GIS Report</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <button class="btn-secondary" type="button" data-action="open-arcgis" disabled>Open Map</button>
+              <div class="file-name" data-role="filename">Not configured</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="USGBC" data-report="AURA Report" data-color="G" data-pdf-source="folder">
+          <header class="report-header hG">
+            <span>AURA Report</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <button class="btn-secondary" type="button" data-action="view" disabled>View PDF</button>
+              <div class="file-name" data-role="filename">No PDF selected</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="USGBC" data-report="Flipthrough" data-color="G" data-streaming="pixel">
+          <header class="report-header hG">
+            <span>Flipthrough</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <span class="badge">Stream</span>
+              <div class="file-name" data-role="streamLabel">Not configured</div>
+              <div class="hint">Set a URL to open your Flipthrough session.</div>
+            </div>
+            <div class="actions">
+              <button class="btn-secondary" type="button" data-action="open-stream" disabled>Open</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="USGBC" data-report="Video" data-color="G" data-video="video">
+          <header class="report-header hG">
+            <span>Video</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <span class="badge">Video</span>
+              <div class="file-name" data-role="videoLabel">Not configured</div>
+              <div class="hint">Set a URL to open the project video.</div>
+            </div>
+            <div class="actions">
+              <button class="btn-secondary" type="button" data-action="open-video" disabled>Open</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="project-col">
+        <div class="project-pill cC"><span class="project-name">Baldwin Hills</span></div>
+
+        <section class="report-card" data-project="Baldwin Hills" data-report="Arc GIS Report" data-color="C">
+          <header class="report-header hC">
+            <span>Arc GIS Report</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <button class="btn-secondary" type="button" data-action="open-arcgis" disabled>Open Map</button>
+              <div class="file-name" data-role="filename">Not configured</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="Baldwin Hills" data-report="AURA Report" data-color="C" data-pdf-source="folder">
+          <header class="report-header hC">
+            <span>AURA Report</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <button class="btn-secondary" type="button" data-action="view" disabled>View PDF</button>
+              <div class="file-name" data-role="filename">No PDF selected</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="Baldwin Hills" data-report="Flipthrough" data-color="C" data-streaming="pixel">
+          <header class="report-header hC">
+            <span>Flipthrough</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <span class="badge">Stream</span>
+              <div class="file-name" data-role="streamLabel">Not configured</div>
+              <div class="hint">Set a URL to open your Flipthrough session.</div>
+            </div>
+            <div class="actions">
+              <button class="btn-secondary" type="button" data-action="open-stream" disabled>Open</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="Baldwin Hills" data-report="Video" data-color="C" data-video="video">
+          <header class="report-header hC">
+            <span>Video</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <span class="badge">Video</span>
+              <div class="file-name" data-role="videoLabel">Not configured</div>
+              <div class="hint">Set a URL to open the project video.</div>
+            </div>
+            <div class="actions">
+              <button class="btn-secondary" type="button" data-action="open-video" disabled>Open</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="project-col">
+        <div class="project-pill cF"><span class="project-name">Altadena</span></div>
+
+        <section class="report-card" data-project="Altadena" data-report="Arc GIS Report" data-color="F">
+          <header class="report-header hF">
+            <span>Arc GIS Report</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <button class="btn-secondary" type="button" data-action="open-arcgis" disabled>Open Map</button>
+              <div class="file-name" data-role="filename">Not configured</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="Altadena" data-report="AURA Report" data-color="F" data-pdf-source="folder">
+          <header class="report-header hF">
+            <span>AURA Report</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <button class="btn-secondary" type="button" data-action="view" disabled>View PDF</button>
+              <div class="file-name" data-role="filename">No PDF selected</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="Altadena" data-report="Flipthrough" data-color="F" data-streaming="pixel">
+          <header class="report-header hF">
+            <span>Flipthrough</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <span class="badge">Stream</span>
+              <div class="file-name" data-role="streamLabel">Not configured</div>
+              <div class="hint">Set a URL to open your Flipthrough session.</div>
+            </div>
+            <div class="actions">
+              <button class="btn-secondary" type="button" data-action="open-stream" disabled>Open</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="Altadena" data-report="Video" data-color="F" data-video="video">
+          <header class="report-header hF">
+            <span>Video</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <span class="badge">Video</span>
+              <div class="file-name" data-role="videoLabel">Not configured</div>
+              <div class="hint">Set a URL to open the project video.</div>
+            </div>
+            <div class="actions">
+              <button class="btn-secondary" type="button" data-action="open-video" disabled>Open</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="project-col">
+        <div class="project-pill cD"><span class="project-name">PUHC PUEDE</span></div>
+
+        <section class="report-card" data-project="PUHC PUEDE" data-report="Arc GIS Report" data-color="D">
+          <header class="report-header hD">
+            <span>Arc GIS Report</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <button class="btn-secondary" type="button" data-action="open-arcgis" disabled>Open Map</button>
+              <div class="file-name" data-role="filename">Not configured</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="PUHC PUEDE" data-report="AURA Report" data-color="D" data-pdf-source="folder">
+          <header class="report-header hD">
+            <span>AURA Report</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <button class="btn-secondary" type="button" data-action="view" disabled>View PDF</button>
+              <div class="file-name" data-role="filename">No PDF selected</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="PUHC PUEDE" data-report="Flipthrough" data-color="D" data-streaming="pixel">
+          <header class="report-header hD">
+            <span>Flipthrough</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <span class="badge">Stream</span>
+              <div class="file-name" data-role="streamLabel">Not configured</div>
+              <div class="hint">Set a URL to open your Flipthrough session.</div>
+            </div>
+            <div class="actions">
+              <button class="btn-secondary" type="button" data-action="open-stream" disabled>Open</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="PUHC PUEDE" data-report="Video" data-color="D" data-video="video">
+          <header class="report-header hD">
+            <span>Video</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <span class="badge">Video</span>
+              <div class="file-name" data-role="videoLabel">Not configured</div>
+              <div class="hint">Set a URL to open the project video.</div>
+            </div>
+            <div class="actions">
+              <button class="btn-secondary" type="button" data-action="open-video" disabled>Open</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="project-col">
+        <div class="project-pill cE"><span class="project-name">Reclamation</span></div>
+
+        <section class="report-card" data-project="Reclamation" data-report="Arc GIS Report" data-color="E">
+          <header class="report-header hE">
+            <span>Arc GIS Report</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <button class="btn-secondary" type="button" data-action="open-arcgis" disabled>Open Map</button>
+              <div class="file-name" data-role="filename">Not configured</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="Reclamation" data-report="AURA Report" data-color="E" data-pdf-source="folder">
+          <header class="report-header hE">
+            <span>AURA Report</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <button class="btn-secondary" type="button" data-action="view" disabled>View PDF</button>
+              <div class="file-name" data-role="filename">No PDF selected</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="Reclamation" data-report="Flipthrough" data-color="E" data-streaming="pixel">
+          <header class="report-header hE">
+            <span>Flipthrough</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <span class="badge">Stream</span>
+              <div class="file-name" data-role="streamLabel">Not configured</div>
+              <div class="hint">Set a URL to open your Flipthrough session.</div>
+            </div>
+            <div class="actions">
+              <button class="btn-secondary" type="button" data-action="open-stream" disabled>Open</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-card" data-project="Reclamation" data-report="Video" data-color="E" data-video="video">
+          <header class="report-header hE">
+            <span>Video</span>
+          </header>
+          <div class="report-body">
+            <div class="report-meta">
+              <span class="badge">Video</span>
+              <div class="file-name" data-role="videoLabel">Not configured</div>
+              <div class="hint">Set a URL to open the project video.</div>
+            </div>
+            <div class="actions">
+              <button class="btn-secondary" type="button" data-action="open-video" disabled>Open</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="pdfModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="PDF Viewer">
+      <div class="modal-top">
+        <div class="modal-title" id="modalTitle">PDF</div>
+        <button class="modal-close" type="button" id="modalClose">Close</button>
+      </div>
+      <iframe class="modal-frame" id="modalFrame" title="PDF Preview"></iframe>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById('pdfModal');
+    const modalFrame = document.getElementById('modalFrame');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalClose = document.getElementById('modalClose');
+
+    const pdfByCard = new WeakMap();
+
+    const auraPdfByProject = {
+      "Altadena": "Files/Altadena%20Fire%20Rebuild_%20Resilient,%20Equitable,%20and%20Community-Oriented%20Recovery%20Plan%20V100.pdf",
+      "Baldwin Hills": "Files/Baldwin%20Hills%206-Mile%20Corridor%20Land%20Context%20and%20Infrastructure%20Report.pdf",
+      "PUHC PUEDE": "Files/PUHC%20PUEDE%20Alleys_%20Architecture%20and%20Urban%20Design%20for%20Environmental%20Justice,%20Climate%20Resilience,%20and%20Community%20Health%20in%20South%20Los%20Angeles%20Census%20Tracts%202098.10%20and%202095.20.pdf",
+      "Pando": "Files/Pando%20Populus_%20Comprehensive%20Environmental%20and%20Social%20Resilience%20Assessment%20for%20Census%20Tract%201397.02%20Images.pdf",
+      "Reclamation": "Files/Reclamation%20Site%202_%20Holistic%20Ecosystem%20Restoration%20for%20Climate-Resilient%20Urban%20Equity%20in%20Census%20Tract%206017.pdf",
+      "ShadeLA": "Files/Shade%20LA_%20Transforming%20Urban%20Heat%20Islands%20in%20South%20Los%20Angeles%20Census%20Tracts%205351.01,%202430,%202382,%20and%202240.10%20through%20Equitable%20Shade%20Structures%20and%20Regenerative%20Design.pdf",
+      "USGBC": "Files/Altadena%20Fire%20Rebuild_%20Resilient,%20Equitable,%20and%20Community-Oriented%20Recovery%20Plan%20V100.pdf"
+    };
+
+    const pixelStreamingUrlByProject = {
+      "ShadeLA": "",
+      "Pando": "",
+      "Baldwin Hills": "",
+      "Altadena": "",
+      "PUHC PUEDE": "",
+      "Reclamation": "",
+      "USGBC": ""
+    };
+
+    const videoUrlByProject = {
+      "ShadeLA": "",
+      "Pando": "",
+      "Baldwin Hills": "https://drive.google.com/file/d/1Mtr_PEtuTASlkRgcPuQJc0BHIPHrg0j4/view?usp=sharing",
+      "Altadena": "",
+      "PUHC PUEDE": "",
+      "Reclamation": "",
+      "USGBC": ""
+    };
+
+    const arcGisUrlByProject = {
+      "ShadeLA": "https://lattcarch.maps.arcgis.com/apps/mapviewer/index.html?webmap=3968fdaf63ea47f39f6abe8f48c8537e",
+      "Pando": "https://lattcarch.maps.arcgis.com/apps/mapviewer/index.html?webmap=1e771fef5ccd4a81b15c1664423d9f9a",
+      "Baldwin Hills": "https://lattcarch.maps.arcgis.com/apps/mapviewer/index.html?webmap=1e771fef5ccd4a81b15c1664423d9f9a",
+      "Altadena": "https://lattcarch.maps.arcgis.com/apps/mapviewer/index.html?webmap=1e771fef5ccd4a81b15c1664423d9f9a",
+      "PUHC PUEDE": "https://lattcarch.maps.arcgis.com/apps/mapviewer/index.html?webmap=32cdd4e1df694db19010bbd6f7883456",
+      "Reclamation": "https://lattcarch.maps.arcgis.com/apps/mapviewer/index.html?webmap=35a4d5e870774216b99760ae453b8b1b",
+      "USGBC": "https://lattcarch.maps.arcgis.com/apps/mapviewer/index.html?webmap=00d3c86165b147128031c7bba35bcb55"
+    };
+
+    function openModal(title, url){
+      modalTitle.textContent = title;
+      modalFrame.src = url;
+      modal.setAttribute('open','');
+      modal.setAttribute('aria-hidden','false');
+    }
+
+    function closeModal(){
+      modalFrame.src = '';
+      modal.removeAttribute('open');
+      modal.setAttribute('aria-hidden','true');
+    }
+
+    function setCardPdf(card, viewBtn, fileNameEl, next){
+      const prev = pdfByCard.get(card);
+      if(prev && prev.objectUrl && prev.url){
+        URL.revokeObjectURL(prev.url);
+      }
+
+      if(!next){
+        pdfByCard.delete(card);
+        if(fileNameEl) fileNameEl.textContent = 'No PDF selected';
+        if(viewBtn) viewBtn.disabled = true;
+        return;
+      }
+
+      pdfByCard.set(card, next);
+      if(fileNameEl) fileNameEl.textContent = next.fileName || 'PDF';
+      if(viewBtn) viewBtn.disabled = false;
+    }
+
+    modalClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if(e.target === modal) closeModal();
+    });
+    window.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape' && modal.hasAttribute('open')) closeModal();
+    });
+
+    document.querySelectorAll('.report-card').forEach(card => {
+      const viewBtn = card.querySelector('[data-action="view"]');
+      const fileName = card.querySelector('[data-role="filename"]');
+
+      const openArcGisBtn = card.querySelector('[data-action="open-arcgis"]');
+      const isArcGis = ((card.getAttribute('data-report') || '').toLowerCase().includes('arc gis'));
+
+      const openStreamBtn = card.querySelector('[data-action="open-stream"]');
+      const streamLabel = card.querySelector('[data-role="streamLabel"]');
+      const isPixelStreaming = card.getAttribute('data-streaming') === 'pixel';
+
+      const openVideoBtn = card.querySelector('[data-action="open-video"]');
+      const videoLabel = card.querySelector('[data-role="videoLabel"]');
+      const isVideo = card.getAttribute('data-video') === 'video';
+
+      if(card.getAttribute('data-pdf-source') === 'folder' && (card.getAttribute('data-report') || '').toLowerCase().includes('aura')){
+        const project = card.getAttribute('data-project') || '';
+        const url = auraPdfByProject[project];
+        if(url){
+          const decodedName = decodeURIComponent(url.split('/').pop() || 'report.pdf');
+          setCardPdf(card, viewBtn, fileName, { url, fileName: decodedName, objectUrl: false });
+        }else{
+          setCardPdf(card, viewBtn, fileName, null);
+        }
+      }
+
+      if(isVideo && openVideoBtn){
+        const project = card.getAttribute('data-project') || '';
+        const videoUrl = videoUrlByProject[project] || '';
+
+        if(videoLabel){
+          videoLabel.textContent = videoUrl ? videoUrl : 'Not configured';
+        }
+
+        if(videoUrl){
+          openVideoBtn.disabled = false;
+          openVideoBtn.addEventListener('click', () => {
+            window.open(videoUrl, '_blank', 'noopener,noreferrer');
+          });
+        }else{
+          openVideoBtn.disabled = true;
+        }
+      }
+
+      if(isPixelStreaming && openStreamBtn){
+        const project = card.getAttribute('data-project') || '';
+        const streamUrl = pixelStreamingUrlByProject[project] || '';
+
+        if(streamLabel){
+          streamLabel.textContent = streamUrl ? streamUrl : 'Not configured';
+        }
+
+        if(streamUrl){
+          openStreamBtn.disabled = false;
+          openStreamBtn.addEventListener('click', () => {
+            window.open(streamUrl, '_blank', 'noopener,noreferrer');
+          });
+        }else{
+          openStreamBtn.disabled = true;
+        }
+      }
+
+      if(isArcGis && openArcGisBtn){
+        const project = card.getAttribute('data-project') || '';
+        const arcUrl = arcGisUrlByProject[project] || '';
+
+        if(fileName){
+          if(arcUrl){
+            fileName.textContent = '';
+            fileName.style.display = 'none';
+          }else{
+            fileName.textContent = 'Not configured';
+            fileName.style.display = '';
+          }
+        }
+
+        if(arcUrl){
+          openArcGisBtn.disabled = false;
+          openArcGisBtn.addEventListener('click', () => {
+            window.open(arcUrl, '_blank', 'noopener,noreferrer');
+          });
+        }else{
+          openArcGisBtn.disabled = true;
+        }
+      }
+
+      if(viewBtn){
+        viewBtn.addEventListener('click', () => {
+          const pdf = pdfByCard.get(card);
+          if(!pdf || !pdf.url) return;
+          const project = card.getAttribute('data-project') || 'Project';
+          const report = card.getAttribute('data-report') || 'Report';
+          openModal(`${project} - ${report}`, pdf.url);
+        });
+      }
+
+    });
+
+    const projectCols = Array.from(document.querySelectorAll('.project-col'));
+    const projectPills = projectCols.map(col => col.querySelector('.project-pill'));
+
+    const titleConnectors = document.getElementById('titleConnectors');
+
+    function renderTitleConnectors(){
+      if(!titleConnectors) return;
+
+      const title = document.querySelector('.page-title');
+      if(!title) return;
+
+      const pills = projectPills.filter(Boolean);
+      if(pills.length === 0) return;
+
+      const titleRect = title.getBoundingClientRect();
+      const y0 = Math.round(titleRect.bottom + 10);
+
+      const centers = pills.map(p => {
+        const r = p.getBoundingClientRect();
+        return {
+          x: r.left + (r.width / 2),
+          y: r.top - 6
+        };
+      });
+
+      const minX = Math.min(...centers.map(c => c.x));
+      const maxX = Math.max(...centers.map(c => c.x));
+
+      titleConnectors.innerHTML = '';
+
+      const h = document.createElement('div');
+      h.className = 'tc-h';
+      h.style.left = `${Math.round(minX)}px`;
+      h.style.top = `${y0}px`;
+      h.style.width = `${Math.round(maxX - minX)}px`;
+      titleConnectors.appendChild(h);
+
+      centers.forEach(c => {
+        const v = document.createElement('div');
+        v.className = 'tc-v';
+        const hLineH = 4;
+        const top = y0 + hLineH;
+        const height = Math.max(0, Math.round(c.y - top));
+        v.style.left = `${Math.round(c.x - 2)}px`;
+        v.style.top = `${top}px`;
+        v.style.height = `${height}px`;
+        titleConnectors.appendChild(v);
+      });
+    }
+
+    function setActiveProjectCol(activeCol){
+      projectCols.forEach(col => col.classList.toggle('is-active', col === activeCol));
+    }
+
+    projectPills.forEach((pill, idx) => {
+      if(!pill) return;
+      pill.setAttribute('role', 'button');
+      pill.setAttribute('tabindex', '0');
+
+      pill.addEventListener('click', () => {
+        const col = projectCols[idx];
+        if(!col) return;
+
+        setActiveProjectCol(col);
+      });
+
+      pill.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' || e.key === ' '){
+          e.preventDefault();
+          pill.click();
+        }
+      });
+    });
+
+    renderTitleConnectors();
+    window.addEventListener('resize', renderTitleConnectors);
+    window.addEventListener('scroll', renderTitleConnectors, { passive: true });
+
+  </script>
+</body>
+</html>
