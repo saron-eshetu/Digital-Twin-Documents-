@@ -246,6 +246,22 @@
       flex-shrink:0;
     }
 
+    /* Multi-video UI */
+    .video-list{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      font-size:11px;
+      line-height:1.2;
+    }
+
+    [data-role="videoActions"]{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      align-items:flex-end;
+    }
+
     .btn{
       appearance:none;
       border:1px solid rgba(255,255,255,.28);
@@ -298,11 +314,6 @@
 
     .report-card[data-report="Flipthrough"] [data-role="streamLabel"],
     .report-card[data-report="Flipthrough"] .hint{
-      display:none;
-    }
-
-    .report-card[data-report="Video"] [data-role="videoLabel"],
-    .report-card[data-report="Video"] .hint{
       display:none;
     }
 
@@ -474,11 +485,11 @@
           <div class="report-body">
             <div class="report-meta">
               <span class="badge">Video</span>
-              <div class="file-name" data-role="videoLabel">Not configured</div>
-              <div class="hint">Set a URL to open the project video.</div>
+              <div class="file-name video-list" data-role="videoList">Not configured</div>
+              <div class="hint">Set one or more URLs to open project videos.</div>
             </div>
             <div class="actions">
-              <button class="btn-secondary" type="button" data-action="open-video" disabled>Open</button>
+              <div data-role="videoActions"></div>
             </div>
           </div>
         </section>
@@ -534,11 +545,11 @@
           <div class="report-body">
             <div class="report-meta">
               <span class="badge">Video</span>
-              <div class="file-name" data-role="videoLabel">Not configured</div>
-              <div class="hint">Set a URL to open the project video.</div>
+              <div class="file-name video-list" data-role="videoList">Not configured</div>
+              <div class="hint">Set one or more URLs to open project videos.</div>
             </div>
             <div class="actions">
-              <button class="btn-secondary" type="button" data-action="open-video" disabled>Open</button>
+              <div data-role="videoActions"></div>
             </div>
           </div>
         </section>
@@ -594,11 +605,11 @@
           <div class="report-body">
             <div class="report-meta">
               <span class="badge">Video</span>
-              <div class="file-name" data-role="videoLabel">Not configured</div>
-              <div class="hint">Set a URL to open the project video.</div>
+              <div class="file-name video-list" data-role="videoList">Not configured</div>
+              <div class="hint">Set one or more URLs to open project videos.</div>
             </div>
             <div class="actions">
-              <button class="btn-secondary" type="button" data-action="open-video" disabled>Open</button>
+              <div data-role="videoActions"></div>
             </div>
           </div>
         </section>
@@ -654,11 +665,11 @@
           <div class="report-body">
             <div class="report-meta">
               <span class="badge">Video</span>
-              <div class="file-name" data-role="videoLabel">Not configured</div>
-              <div class="hint">Set a URL to open the project video.</div>
+              <div class="file-name video-list" data-role="videoList">Not configured</div>
+              <div class="hint">Set one or more URLs to open project videos.</div>
             </div>
             <div class="actions">
-              <button class="btn-secondary" type="button" data-action="open-video" disabled>Open</button>
+              <div data-role="videoActions"></div>
             </div>
           </div>
         </section>
@@ -714,11 +725,11 @@
           <div class="report-body">
             <div class="report-meta">
               <span class="badge">Video</span>
-              <div class="file-name" data-role="videoLabel">Not configured</div>
-              <div class="hint">Set a URL to open the project video.</div>
+              <div class="file-name video-list" data-role="videoList">Not configured</div>
+              <div class="hint">Set one or more URLs to open project videos.</div>
             </div>
             <div class="actions">
-              <button class="btn-secondary" type="button" data-action="open-video" disabled>Open</button>
+              <div data-role="videoActions"></div>
             </div>
           </div>
         </section>
@@ -774,11 +785,11 @@
           <div class="report-body">
             <div class="report-meta">
               <span class="badge">Video</span>
-              <div class="file-name" data-role="videoLabel">Not configured</div>
-              <div class="hint">Set a URL to open the project video.</div>
+              <div class="file-name video-list" data-role="videoList">Not configured</div>
+              <div class="hint">Set one or more URLs to open project videos.</div>
             </div>
             <div class="actions">
-              <button class="btn-secondary" type="button" data-action="open-video" disabled>Open</button>
+              <div data-role="videoActions"></div>
             </div>
           </div>
         </section>
@@ -834,11 +845,11 @@
           <div class="report-body">
             <div class="report-meta">
               <span class="badge">Video</span>
-              <div class="file-name" data-role="videoLabel">Not configured</div>
-              <div class="hint">Set a URL to open the project video.</div>
+              <div class="file-name video-list" data-role="videoList">Not configured</div>
+              <div class="hint">Set one or more URLs to open project videos.</div>
             </div>
             <div class="actions">
-              <button class="btn-secondary" type="button" data-action="open-video" disabled>Open</button>
+              <div data-role="videoActions"></div>
             </div>
           </div>
         </section>
@@ -884,11 +895,12 @@
       "USGBC": ""
     };
 
+    /* Multi-video mapping: array = multiple videos, string = single video, "" = none */
     const videoUrlByProject = {
       "ShadeLA": [
-        {title: "Mary", url: "https://drive.google.com/file/d/1gjoIIHO3KxxphVay7UshSjkQwNnDtPC7/view?usp=sharing&t=1"}, 
-        {title: "Monica", url:"https://drive.google.com/file/d/1gjoIIHO3KxxphVay7UshSjkQwNnDtPC7/view?usp=sharing&t=1"}
-        ],
+        { title: "Mary", url: "https://drive.google.com/file/d/1gjoIIHO3KxxphVay7UshSjkQwNnDtPC7/view?usp=sharing&t=1" },
+        { title: "Monica", url: "https://drive.google.com/file/d/1gjoIIHO3KxxphVay7UshSjkQwNnDtPC7/view?usp=sharing&t=1" }
+      ],
       "Pando": "",
       "Baldwin Hills": "https://drive.google.com/file/d/1Mtr_PEtuTASlkRgcPuQJc0BHIPHrg0j4/view?usp=sharing",
       "Altadena": "",
@@ -938,6 +950,39 @@
       if(viewBtn) viewBtn.disabled = false;
     }
 
+    function normalizeVideoItems(raw){
+      if(!raw) return [];
+      if(typeof raw === 'string'){
+        const trimmed = raw.trim();
+        return trimmed ? [{ title: 'Video 1', url: trimmed }] : [];
+      }
+      if(Array.isArray(raw)){
+        return raw
+          .map((item, idx) => {
+            if(!item) return null;
+            if(typeof item === 'string'){
+              const trimmed = item.trim();
+              return trimmed ? { title: `Video ${idx + 1}`, url: trimmed } : null;
+            }
+            if(typeof item === 'object'){
+              const url = (item.url || '').toString().trim();
+              if(!url) return null;
+              const title = (item.title || `Video ${idx + 1}`).toString().trim() || `Video ${idx + 1}`;
+              return { title, url };
+            }
+            return null;
+          })
+          .filter(Boolean);
+      }
+      if(typeof raw === 'object'){
+        const url = (raw.url || '').toString().trim();
+        if(!url) return [];
+        const title = (raw.title || 'Video 1').toString().trim() || 'Video 1';
+        return [{ title, url }];
+      }
+      return [];
+    }
+
     modalClose.addEventListener('click', closeModal);
     modal.addEventListener('click', (e) => {
       if(e.target === modal) closeModal();
@@ -957,8 +1002,8 @@
       const streamLabel = card.querySelector('[data-role="streamLabel"]');
       const isPixelStreaming = card.getAttribute('data-streaming') === 'pixel';
 
-      const openVideoBtn = card.querySelector('[data-action="open-video"]');
-      const videoLabel = card.querySelector('[data-role="videoLabel"]');
+      const videoList = card.querySelector('[data-role="videoList"]');
+      const videoActions = card.querySelector('[data-role="videoActions"]');
       const isVideo = card.getAttribute('data-video') === 'video';
 
       if(card.getAttribute('data-pdf-source') === 'folder' && (card.getAttribute('data-report') || '').toLowerCase().includes('aura')){
@@ -972,21 +1017,30 @@
         }
       }
 
-      if(isVideo && openVideoBtn){
+      if(isVideo && videoList && videoActions){
         const project = card.getAttribute('data-project') || '';
-        const videoUrl = videoUrlByProject[project] || '';
+        const items = normalizeVideoItems(videoUrlByProject[project]);
 
-        if(videoLabel){
-          videoLabel.textContent = videoUrl ? videoUrl : 'Not configured';
-        }
+        videoActions.innerHTML = '';
+        videoList.innerHTML = '';
 
-        if(videoUrl){
-          openVideoBtn.disabled = false;
-          openVideoBtn.addEventListener('click', () => {
-            window.open(videoUrl, '_blank', 'noopener,noreferrer');
-          });
+        if(items.length === 0){
+          videoList.textContent = 'Not configured';
         }else{
-          openVideoBtn.disabled = true;
+          items.forEach((item) => {
+            const row = document.createElement('div');
+            row.textContent = item.title;
+            videoList.appendChild(row);
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn-secondary';
+            btn.textContent = `Open ${item.title}`;
+            btn.addEventListener('click', () => {
+              window.open(item.url, '_blank', 'noopener,noreferrer');
+            });
+            videoActions.appendChild(btn);
+          });
         }
       }
 
@@ -1041,7 +1095,6 @@
           openModal(`${project} - ${report}`, pdf.url);
         });
       }
-
     });
 
     const projectCols = Array.from(document.querySelectorAll('.project-col'));
@@ -1121,18 +1174,6 @@
     renderTitleConnectors();
     window.addEventListener('resize', renderTitleConnectors);
     window.addEventListener('scroll', renderTitleConnectors, { passive: true });
-
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
