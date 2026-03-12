@@ -239,14 +239,6 @@
       max-width:68%;
     }
 
-    .actions{
-      display:flex;
-      align-items:center;
-      gap:16px;
-      flex-shrink:0;
-    }
-
-    /* Multi-video UI */
     .video-list{
       display:flex;
       flex-direction:column;
@@ -255,11 +247,37 @@
       line-height:1.2;
     }
 
+    .actions{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      flex-shrink:0;
+    }
+
     [data-role="videoActions"]{
       display:flex;
       flex-direction:column;
       gap:6px;
       align-items:flex-end;
+    }
+
+    .report-card[data-video="video"] .actions{
+      justify-content:flex-end;
+    }
+
+    .video-action-row{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      width:100%;
+      justify-content:space-between;
+    }
+
+    .video-action-label{
+      font-size:12px;
+      font-weight:800;
+      color:#1b2236;
+      min-width:96px;
     }
 
     .btn{
@@ -308,6 +326,20 @@
       white-space:normal;
     }
 
+    .report-card[data-project="ShadeLA"][data-report="Video"] [data-role="videoList"]{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      overflow:visible;
+      -webkit-line-clamp:unset;
+      line-clamp:unset;
+      -webkit-box-orient:unset;
+    }
+
+    .report-card[data-project="ShadeLA"][data-report="Video"] .badge{
+      display:none;
+    }
+
     .report-card[data-report="AURA Report"] .file-name{
       display:none;
     }
@@ -315,6 +347,19 @@
     .report-card[data-report="Flipthrough"] [data-role="streamLabel"],
     .report-card[data-report="Flipthrough"] .hint{
       display:none;
+    }
+
+    .report-card[data-report="Video"] [data-role="videoLabel"],
+    .report-card[data-report="Video"] .hint{
+      display:none;
+    }
+
+    .report-card[data-report="Video"] .report-body{
+      align-items:flex-start;
+    }
+
+    .report-card[data-report="Video"] .actions{
+      padding-top:2px;
     }
 
     .report-meta{
@@ -895,18 +940,23 @@
       "USGBC": ""
     };
 
-    /* Multi-video mapping: array = multiple videos, string = single video, "" = none */
     const videoUrlByProject = {
       "ShadeLA": [
-        { title: "Mary", url: "https://drive.google.com/file/d/1gjoIIHO3KxxphVay7UshSjkQwNnDtPC7/view?usp=sharing&t=1" },
-        { title: "Monica", url: "https://drive.google.com/file/d/1gjoIIHO3KxxphVay7UshSjkQwNnDtPC7/view?usp=sharing&t=1" }
+        { title: "By Mary:", url: "https://drive.google.com/file/d/1gjoIIHO3KxxphVay7UshSjkQwNnDtPC7/view?usp=sharing&t=1" },
+        { title: "By Monica:", url: "https://drive.google.com/file/d/1NuXMsVKxzeRHjKUPk0tu2SBh1nfO1ZXE/view" }
       ],
-      "Pando": "",
-      "Baldwin Hills": "https://drive.google.com/file/d/1Mtr_PEtuTASlkRgcPuQJc0BHIPHrg0j4/view?usp=sharing",
-      "Altadena": "",
-      "PUHC PUEDE": "",
-      "Reclamation": "",
-      "USGBC": "https://drive.google.com/file/d/12kt5RScLadVWuhMQ-d3hyvTw9CoPC06G/view?usp=drive_web"
+      "Pando": [],
+      "Baldwin Hills": [
+        { title: "Video 1", url: "https://drive.google.com/file/d/1Mtr_PEtuTASlkRgcPuQJc0BHIPHrg0j4/view?usp=sharing" }
+      ],
+      "Altadena": [],
+      "PUHC PUEDE": [],
+      "Reclamation": [
+        { title: "Video 1", url: "https://drive.google.com/file/d/1mwFt2UUAxdWAjmLUILTEa1WA5k2_kL1q/view?usp=sharing" }
+      ],
+      "USGBC": [
+        { title: "Video 1", url: "https://drive.google.com/file/d/12kt5RScLadVWuhMQ-d3hyvTw9CoPC06G/view" }
+      ]
     };
 
     const arcGisUrlByProject = {
@@ -932,6 +982,43 @@
       modal.setAttribute('aria-hidden','true');
     }
 
+    function normalizeVideoItems(raw){
+      if(!raw) return [];
+      if(typeof raw === 'string'){
+        const trimmed = raw.trim();
+        return trimmed ? [{ title: 'Video 1', url: trimmed }] : [];
+      }
+
+      if(Array.isArray(raw)){
+        return raw
+          .map((item, idx) => {
+            if(!item) return null;
+            if(typeof item === 'string'){
+              const trimmed = item.trim();
+              if(!trimmed) return null;
+              return { title: `Video ${idx + 1}`, url: trimmed };
+            }
+            if(typeof item === 'object'){
+              const title = (item.title || `Video ${idx + 1}`).toString().trim() || `Video ${idx + 1}`;
+              const url = (item.url || '').toString().trim();
+              if(!url && !title) return null;
+              return { title, url };
+            }
+            return null;
+          })
+          .filter(Boolean);
+      }
+
+      if(typeof raw === 'object'){
+        const title = (raw.title || 'Video 1').toString().trim() || 'Video 1';
+        const url = (raw.url || '').toString().trim();
+        if(!url && !title) return [];
+        return [{ title, url }];
+      }
+
+      return [];
+    }
+
     function setCardPdf(card, viewBtn, fileNameEl, next){
       const prev = pdfByCard.get(card);
       if(prev && prev.objectUrl && prev.url){
@@ -948,39 +1035,6 @@
       pdfByCard.set(card, next);
       if(fileNameEl) fileNameEl.textContent = next.fileName || 'PDF';
       if(viewBtn) viewBtn.disabled = false;
-    }
-
-    function normalizeVideoItems(raw){
-      if(!raw) return [];
-      if(typeof raw === 'string'){
-        const trimmed = raw.trim();
-        return trimmed ? [{ title: 'Video 1', url: trimmed }] : [];
-      }
-      if(Array.isArray(raw)){
-        return raw
-          .map((item, idx) => {
-            if(!item) return null;
-            if(typeof item === 'string'){
-              const trimmed = item.trim();
-              return trimmed ? { title: `Video ${idx + 1}`, url: trimmed } : null;
-            }
-            if(typeof item === 'object'){
-              const url = (item.url || '').toString().trim();
-              if(!url) return null;
-              const title = (item.title || `Video ${idx + 1}`).toString().trim() || `Video ${idx + 1}`;
-              return { title, url };
-            }
-            return null;
-          })
-          .filter(Boolean);
-      }
-      if(typeof raw === 'object'){
-        const url = (raw.url || '').toString().trim();
-        if(!url) return [];
-        const title = (raw.title || 'Video 1').toString().trim() || 'Video 1';
-        return [{ title, url }];
-      }
-      return [];
     }
 
     modalClose.addEventListener('click', closeModal);
@@ -1017,30 +1071,68 @@
         }
       }
 
-      if(isVideo && videoList && videoActions){
+      if(isVideo && videoActions){
         const project = card.getAttribute('data-project') || '';
         const items = normalizeVideoItems(videoUrlByProject[project]);
+        const actionableItems = items.filter(item => item && item.url);
 
-        videoActions.innerHTML = '';
-        videoList.innerHTML = '';
+        while(videoActions.firstChild) videoActions.removeChild(videoActions.firstChild);
+        if(videoList){
+          while(videoList.firstChild) videoList.removeChild(videoList.firstChild);
+        }
 
-        if(items.length === 0){
-          videoList.textContent = 'Not configured';
+        if(actionableItems.length === 0){
+          if(videoList){
+            videoList.textContent = 'Not configured';
+            videoList.style.display = '';
+          }
         }else{
-          items.forEach((item) => {
-            const row = document.createElement('div');
-            row.textContent = item.title;
-            videoList.appendChild(row);
+          if(videoList){
+            if(project === 'ShadeLA'){
+              videoList.textContent = '';
+              videoList.style.display = 'none';
+            }else{
+              videoList.textContent = '';
+              videoList.style.display = 'none';
+            }
+          }
 
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'btn-secondary';
-            btn.textContent = `Open ${item.title}`;
-            btn.addEventListener('click', () => {
-              window.open(item.url, '_blank', 'noopener,noreferrer');
+          if(project === 'ShadeLA'){
+            actionableItems.forEach((item) => {
+              const row = document.createElement('div');
+              row.className = 'video-action-row';
+
+              const label = document.createElement('div');
+              label.className = 'video-action-label';
+              label.textContent = item.title;
+
+              const btn = document.createElement('button');
+              btn.type = 'button';
+              btn.className = 'btn-secondary';
+              btn.textContent = 'Open';
+              btn.disabled = false;
+              btn.addEventListener('click', () => {
+                window.open(item.url, '_blank', 'noopener,noreferrer');
+              });
+
+              row.appendChild(label);
+              row.appendChild(btn);
+              videoActions.appendChild(row);
             });
-            videoActions.appendChild(btn);
-          });
+          }else{
+            const first = actionableItems[0];
+            if(first){
+              const btn = document.createElement('button');
+              btn.type = 'button';
+              btn.className = 'btn-secondary';
+              btn.textContent = 'Open';
+              btn.disabled = false;
+              btn.addEventListener('click', () => {
+                window.open(first.url, '_blank', 'noopener,noreferrer');
+              });
+              videoActions.appendChild(btn);
+            }
+          }
         }
       }
 
@@ -1095,6 +1187,7 @@
           openModal(`${project} - ${report}`, pdf.url);
         });
       }
+
     });
 
     const projectCols = Array.from(document.querySelectorAll('.project-col'));
@@ -1174,6 +1267,7 @@
     renderTitleConnectors();
     window.addEventListener('resize', renderTitleConnectors);
     window.addEventListener('scroll', renderTitleConnectors, { passive: true });
+
   </script>
 </body>
 </html>
